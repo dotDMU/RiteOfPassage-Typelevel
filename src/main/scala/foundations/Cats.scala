@@ -17,7 +17,7 @@ object Cats {
   /*
  * Functor-Implementierungen:
  *
- * - F[_] ist ein Typparameter höherer Ordnung(Higher kinded type), der einen Container-Typ darstellt
+ * - F[_] ist ein Parameter höherer Ordnung(Higher kinded type), der einen Container-Typ darstellt
  * - Functor[F] ist eine Typklasse, die eine `map`-Operation für Typ F bereitstellt
  * - Der "using"-Parameter in Scala 3 ersetzt das frühere "implicit"
  * - increment: Nutzt direkt die functor.map-Methode zur Transformation
@@ -88,7 +88,7 @@ object Cats {
    * - FlatMap[F] erweitert Functor[F] und erbt somit die map-Fähigkeit
    * - Die Hauptfunktion von FlatMap ist flatMap, die "verschachtelte Kontexte abflacht"
    * - flatMap nimmt einen Wert in einem Kontext F[A] und eine Funktion A => F[B] und liefert F[B]
-   * - FlatMap erlaubt das Verketten von kontextbehafteten Operationen
+   * - FlatMap erlaubt das Verketten von kontext behafteten Operationen
    * - Im ersten Beispiel: List(1, 2, 3) wird zu List(1, 2, 2, 3, 3, 4) durch Abflachung
    *   - Für jedes Element x wird List(x, x+1) erzeugt und alle Ergebnislisten werden abgeflacht
    *
@@ -134,7 +134,7 @@ object Cats {
    * Monad-Implementierungen:
    *
    * - Monad[F] vereint Applicative[F] und FlatMap[F] und kombiniert deren Fähigkeiten
-   * - Durch diese Kombination erhält eine Monade sowohl:
+   * - Durch diese Kombination erhält eine Monade:
    *   - Die Fähigkeit, Werte in einen Kontext zu einzubetten (pure von Applicative)
    *   - Die Fähigkeit, Operationen zu verketten (flatMap von FlatMap)
    *
@@ -142,7 +142,7 @@ object Cats {
    * - Diese Implementierung zeigt ein wichtiges Monad-Gesetz: map lässt sich durch flatMap und pure ausdrücken
    * - Für jeden Wert a wird die Funktion f angewendet und das Ergebnis mit pure eingebettet
    *
-   * - Die crossProduct_v2-Funktion verwendet einen Monad-Kontextbound (F[_] : Monad)
+   * - Die crossProduct_v2-Funktion verwendet einen Monad-Context bound (F[_] : Monad)
    * - Die for-comprehension wird auf Monaden besonders mächtig, da sie sowohl map als auch flatMap nutzen kann
    * - Beachte: Der Code ist identisch zum vorherigen crossProduct_v2 mit FlatMap, funktioniert aber nun mit jedem Monad-Typ
    *
@@ -177,21 +177,21 @@ object Cats {
   // applicative-error - computations that can fail
 
   /*
-   * ApplicativeError und MonadError - Fehlerbehaftete Berechnungen:
+   * ApplicativeError und MonadError - fehlerbehaftete Berechnungen:
    *
    * - ApplicativeError[F, E] erweitert Applicative[F] um Fehlerbehandlung
-   * - Der zusätzliche Typparameter E repräsentiert den Fehlertyp
+   * - Der zusätzliche Parameter E repräsentiert den Fehlertyp
    * - Hauptfunktion: raiseError[A](error: E): F[A] erzeugt einen fehlgeschlagenen Kontextwert
    *
    * - Die type-Alias ErrorOr[A] = Either[String, A] definiert einen konkreten Fehlerkontext
    *   - Left enthält einen Fehler vom Typ String
    *   - Right enthält einen erfolgreichen Wert vom Typ A
    *
-   * - ApplicativeError erlaubt sowohl:
+   * - ApplicativeError erlaubt:
    *   - Erfolgreiche Berechnungen: applicativeEither.pure(42) erzeugt Right(42)
    *   - Fehlgeschlagene Berechnungen: applicativeEither.raiseError("Zonk") erzeugt Left("Zonk")
    *
-   * - Die Syntax-Erweiterung ermöglicht eine intuitivere Schreibweise: "Zonk".raiseError
+   * - Die Syntax-Erweiterung ermöglicht eine intuitive Schreibweise: "Zonk".raiseError
    *
    * - MonadError[F, E] erweitert sowohl ApplicativeError[F, E] als auch Monad[F]
    * - Dies kombiniert fehlerbehaftete Berechnungen mit monadischer Verkettung
