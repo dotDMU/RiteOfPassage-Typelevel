@@ -3,7 +3,7 @@ package com.rockthejvm.jobsboard
 import cats.effect.{IO, IOApp}
 import com.rockthejvm.jobsboard.config.EmberConfig
 import com.rockthejvm.jobsboard.config.syntax.loadF
-import com.rockthejvm.jobsboard.http.routes.HealthRoutes
+import com.rockthejvm.jobsboard.http.HttpApi
 import org.http4s.Response
 import org.http4s.ember.server.EmberServerBuilder
 import pureconfig.ConfigSource
@@ -14,7 +14,7 @@ object Application extends IOApp.Simple {
           .default[IO]
           .withHost(config.host)
           .withPort(config.port)
-          .withHttpApp(HealthRoutes[IO].routes.orNotFound)
+          .withHttpApp(HttpApi[IO].endpoints.orNotFound)
           .build
           .use(_ => IO.println("Server ready!") *> IO.never)
     }
