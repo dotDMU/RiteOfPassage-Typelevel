@@ -142,3 +142,43 @@ service.createJob(jobInfo).log(
 ## Bei Fragen: Meldet euch :-)
 
 Diese Themen sind für alle neu. Lieber gemeinsam durchdenken als blind refaktorisieren.
+
+
+🔍 Warum zwei Extensions?
+1. Future[A]
+
+Fehler = Throwable im „äußeren Kontext“ → Logging via MonadError[Future, Throwable]
+
+extension [F[_], A](fa: F[A])
+  def logError(toMsg: Throwable => String)(using Logger[F], MonadError[F, Throwable]): F[A] =
+    fa.attempt.flatTap {
+      case Left(e)  => Logger[F].error(toMsg(e))
+      case Right(_) => ().pure[F]
+    }.rethrow
+
+2. EitherT[F, AppError, A]
+
+Fehler = AppError, nicht Throwable. Du brauchst leftSemiflatTap (nur für EitherT!).
+
+import cats.data.EitherT
+import cats.syntax.all.*
+import org.typelevel.log4cats.Logger
+
+extension [F[_]: Monad, E, A](fa: EitherT[F, E, A])
+  def logError(toMsg: E => String)(using Logger[F]): EitherT[F, E, A] =
+    fa.leftSemiflatTap(e => Logger[F].error(toMsg(e)))
+
+✅ Fazit
+Typ	Fehler-Typ	Extension braucht
+Future[A]	Throwable	MonadError[F, Throwable] + Logger[F]
+EitherT[Future, E, A]	E (z. B. AppError)	Logger[F] (kein MonadError nötig)
+👌 Vorteil:
+
+Beide Extensions können parallel existieren, und dein Code nutzt immer die passende, ohne Konflikt:
+
+val futureJob: Future[Job] = ...
+val jobET: EitherT[Future, AppError, Job] = ...
+
+futureJob.logError(t => s"Future failed: $t")
+jobET.logError(e => s"Job creation failed: $e")
+
