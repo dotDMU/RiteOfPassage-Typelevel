@@ -10,11 +10,12 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
 import org.http4s.circe.CirceEntityCodec.*
 import io.circe.generic.auto.*
+import org.typelevel.log4cats.Logger
 
 import java.util.UUID
 import scala.collection.mutable
 
-class JobRoutes[F[_] : Concurrent] private extends Http4sDsl [F]{
+class JobRoutes[F[_] : Concurrent: Logger] private extends Http4sDsl [F]{
 
   // "database"
   private val database = mutable.Map[UUID, Job]()
@@ -45,11 +46,14 @@ class JobRoutes[F[_] : Concurrent] private extends Http4sDsl [F]{
     ).pure[F]
   }
 
+
+  import com.rockthejvm.jobsboard.logging.syntax.*
   private val createJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case request @ POST -> Root / "create" =>
       for {
-        jobInfo <- request.as[JobInfo]
+        jobInfo <- request.as[JobInfo].logError(e => s"Parsing payload failed: $e")
         job <- createJob(jobInfo)
+        _ <- Logger[F].info(s"Created job: $job")
         response <- Created(job.id)
       } yield response
   }
@@ -85,5 +89,5 @@ class JobRoutes[F[_] : Concurrent] private extends Http4sDsl [F]{
   )
 }
   object JobRoutes {
-    def apply[F[_]: Concurrent] = new JobRoutes[F]
+    def apply[F[_]: Concurrent: Logger] = new JobRoutes[F]
   }
