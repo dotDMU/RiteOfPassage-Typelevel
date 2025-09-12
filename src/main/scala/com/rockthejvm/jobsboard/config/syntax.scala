@@ -53,3 +53,4 @@ object syntax {
 //  loadF[F[_], A]	Generic, monadic config loader
 //  using ConfigReader, MonadThrow, ClassTag	Type class-based dependencies
 //  F.pure(...).flatMap	Lifts Either into monad and handles error/value
+
