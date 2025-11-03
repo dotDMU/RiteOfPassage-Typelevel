@@ -19,7 +19,7 @@ trait Jobs[F[_]] {
   // CRUD
 
   def create(ownerEmail: String, jobInfo: JobInfo): F[UUID]
-  def all(): F[List[Job]] //TODO fix thoughts on the all method
+  def all(): F[List[Job]] // TODO fix thoughts on the all method
   def all(filer: JobFilter, pagination: Pagination): F[List[Job]]
   def find(id: UUID): F[Option[Job]]
   def update(id: UUID, jobInfo: JobInfo): F[Option[Job]]
@@ -93,7 +93,6 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
       .transact(xa)
       .logError(e => s"Failed query: ${e.getMessage}")
   }
-
 
   override def all(): F[List[Job]] = {
     sql"""
@@ -189,17 +188,15 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
     val statement = selectFragment |+| fromFragment |+| whereFragment |+| paginationFragment
 
     Logger[F].info(statement.toString) *>
-    statement
-      .query[Job]
-      .to[List]
-      .transact(xa)
-      .logError(e => s"Failed query: ${e.getMessage}")
-
+      statement
+        .query[Job]
+        .to[List]
+        .transact(xa)
+        .logError(e => s"Failed query: ${e.getMessage}")
   }
 
   override def find(id: UUID): F[Option[Job]] = {
     sql"""
-      }
         SELECT
       id,
       date,
@@ -330,5 +327,6 @@ object LiveJobs {
       )
   }
 
-  def apply[F[_]: MonadCancelThrow: Logger](xa: Transactor[F]): F[LiveJobs[F]] = new LiveJobs[F](xa).pure[F]
+  def apply[F[_]: MonadCancelThrow: Logger](xa: Transactor[F]): F[LiveJobs[F]] =
+    new LiveJobs[F](xa).pure[F]
 }
