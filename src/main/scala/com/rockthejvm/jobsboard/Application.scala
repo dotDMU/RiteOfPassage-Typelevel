@@ -1,17 +1,14 @@
 package com.rockthejvm.jobsboard
 
 import cats.effect.{IO, IOApp}
-import com.rockthejvm.jobsboard.modules.*
 import com.rockthejvm.jobsboard.config.AppConfig
 import com.rockthejvm.jobsboard.config.syntax.loadF
+import com.rockthejvm.jobsboard.modules.*
 import org.http4s.Response
 import org.http4s.ember.server.EmberServerBuilder
-import pureconfig.ConfigSource
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import com.rockthejvm.jobsboard.modules.HttpApi.apply
-import org.http4s.server.middleware.ErrorAction.httpApp
-import javax.security.auth.login.AppConfigurationEntry
+import pureconfig.ConfigSource
 
 object Application extends IOApp.Simple {
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]

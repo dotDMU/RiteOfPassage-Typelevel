@@ -8,9 +8,9 @@ import java.util.UUID
 import com.rockthejvm.jobsboard.domain.job
 trait JobFixture {
 
-  val NotFoundJobUuid = UUID.fromString("6ea79557-3112-4c84-a8f5-1d1e2c300948")
+  val NotFoundJobUuid: UUID = UUID.fromString("6ea79557-3112-4c84-a8f5-1d1e2c300948")
 
-  val AwesomeJobUuid = UUID.fromString("843df718-ec6e-4d49-9289-f799c0f40064")
+  val AwesomeJobUuid: UUID = UUID.fromString("843df718-ec6e-4d49-9289-f799c0f40064")
 
   val AwesomeJob = Job(
     AwesomeJobUuid,
@@ -80,15 +80,15 @@ trait JobFixture {
     None
   )
 
-  val RockTheJvmJobWithNotFoundId = AwesomeJob.copy(id = NotFoundJobUuid)
+  val RockTheJvmJobWithNotFoundId: Job = AwesomeJob.copy(id = NotFoundJobUuid)
 
-  val AnotherAwesomeJobUuid = UUID.fromString("19a941d0-aa19-477b-9ab0-a7033ae65c2b")
-  val AnotherAwesomeJob     = AwesomeJob.copy(id = AnotherAwesomeJobUuid)
+  val AnotherAwesomeJobUuid: UUID = UUID.fromString("19a941d0-aa19-477b-9ab0-a7033ae65c2b")
+  val AnotherAwesomeJob: Job = AwesomeJob.copy(id = AnotherAwesomeJobUuid)
 
-  val RockTheJvmAwesomeJob =
+  val RockTheJvmAwesomeJob: Job =
     AwesomeJob.copy(jobInfo = AwesomeJob.jobInfo.copy(company = "RockTheJvm"))
 
-  val NewJobUuid    = UUID.fromString("efcd2a64-4463-453a-ada8-b1bae1db4377")
+  val NewJobUuid: UUID = UUID.fromString("efcd2a64-4463-453a-ada8-b1bae1db4377")
   val AwesomeNewJob = JobInfo(
     "Awesome Company",
     "Tech Lead",

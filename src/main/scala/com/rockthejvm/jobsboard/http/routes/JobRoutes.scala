@@ -1,29 +1,32 @@
 package com.rockthejvm.jobsboard.http.routes
 
 import cats.effect.Concurrent
-import cats.{Monad, MonadThrow}
 import cats.implicits.*
+import com.rockthejvm.jobsboard.core.Jobs
 import com.rockthejvm.jobsboard.domain.job.*
+import com.rockthejvm.jobsboard.domain.pagination.Pagination
 import com.rockthejvm.jobsboard.http.response.FailureResponse
-import org.http4s.HttpRoutes
-import org.http4s.dsl.Http4sDsl
-import org.http4s.server.Router
-import org.http4s.circe.CirceEntityCodec.*
+import com.rockthejvm.jobsboard.http.validation.syntax.*
 import io.circe.generic.auto.*
+import org.http4s.HttpRoutes
+import org.http4s.circe.CirceEntityCodec.*
+import org.http4s.server.Router
 import org.typelevel.log4cats.Logger
 
 import java.util.UUID
-import scala.collection.mutable
-import com.rockthejvm.jobsboard.core.Jobs
 
-class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends Http4sDsl[F] {
+class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends HttpValidationDsl[F] {
+  private object OffsetQueryParam extends OptionalQueryParamDecoderMatcher[Int]("offset")
+  private object LimitQueryParam  extends OptionalQueryParamDecoderMatcher[Int]("limit")
 
   // POST /jobs?offset=x&limit=< { filters } // TODO add query params and filters
-  private val allJobsRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case POST -> Root =>
-    for {
-      jobsList <- jobs.all()
-      response <- Ok(jobsList)
-    } yield response
+  private val allJobsRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
+    case request @ POST -> Root :? LimitQueryParam(limit) +& OffsetQueryParam(offset) =>
+      for {
+        filter   <- request.as[JobFilter]
+        jobsList <- jobs.all(filter, Pagination(limit, offset))
+        response <- Ok(jobsList)
+      } yield response
   }
 
   // GET /jobs/uuid
@@ -33,40 +36,31 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends Http4s
       case None      => NotFound(FailureResponse(s"Job with $id not found."))
     }
   }
-
-  // POST /jobs { jobInfo }
-  private def createJob(jobInfo: JobInfo): F[Job] = {
-    Job(
-      id = UUID.randomUUID(),
-      date = System.currentTimeMillis(),
-      ownerEmail = "TODO",
-      jobInfo = jobInfo,
-      active = true
-    ).pure[F]
-  }
-
+  
+  // POST /jobs/create { jobIn
   import com.rockthejvm.jobsboard.logging.syntax.*
   private val createJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case request @ POST -> Root / "create" =>
-      for {
-        jobInfo  <- request.as[JobInfo].logError(e => s"Parsing payload failed: $e")
-        jobId    <- jobs.create("TODO@rockthejvm.com", jobInfo)
-        response <- Ok(jobId)
-      } yield response
+      request.validate[JobInfo] { jobInfo =>
+        for {
+          jobId    <- jobs.create("TODO@rockthejvm.com", jobInfo)
+          response <- Ok(jobId)
+        } yield response
+      }
   }
 
   // PUT /jobs/uuid { jobInfo }
   private val updateJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case request @ PUT -> Root / UUIDVar(id) =>
-      for {
-        jobInfo     <- request.as[JobInfo]
-        mayBeNewJob <- jobs.update(id, jobInfo)
-        response    <- mayBeNewJob match {
-          case Some(job) => Ok()
-          case None      => NotFound(FailureResponse(s"Cannot update job $id:  not found"))
-        }
-      } yield response
-
+      request.validate[JobInfo] { jobInfo =>
+        for {
+          mayBeNewJob <- jobs.update(id, jobInfo)
+          response    <- mayBeNewJob match {
+            case Some(job) => Ok()
+            case None      => NotFound(FailureResponse(s"Cannot update job $id:  not found"))
+          }
+        } yield response
+      }
   }
 
   // DELETE /job/uuid
